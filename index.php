@@ -1,6 +1,33 @@
 <?php
 require_once('./connection.php');
 
+// Initialize messages
+$message = '';
+
+// Check if a form has been submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['add_title'])) {
+        // Add a book
+        $addTitle = trim($_POST['add_title']);
+        $addPrice = trim($_POST['add_price']);
+
+        // Prepare and execute the insert statement
+        $insertStmt = $pdo->prepare('INSERT INTO books (title, price) VALUES (:title, :price)');
+        $insertStmt->execute(['title' => $addTitle, 'price' => $addPrice]);
+
+        $message = 'Book added successfully.';
+    } elseif (isset($_POST['remove_title'])) {
+        // Remove a book
+        $removeTitle = trim($_POST['remove_title']);
+
+        // Prepare and execute the delete statement
+        $deleteStmt = $pdo->prepare('DELETE FROM books WHERE title = :title');
+        $deleteStmt->execute(['title' => $removeTitle]);
+
+        $message = 'Book removed successfully.';
+    }
+}
+
 // Fetch all books in alphabetical order by title
 $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
 ?>
@@ -21,6 +48,7 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            position: relative; /* For positioning child elements */
         }
         .bookstore-container {
             width: 100%;
@@ -37,6 +65,7 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             padding: 0;
             list-style-type: none;
             margin: 0;
+            margin-bottom: 20px;
         }
         .book-item {
             background-color: #ffffff;
@@ -54,9 +83,28 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             transform: scale(1.02);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
-        .book-title {
-            font-size: 1.1rem;
-            font-weight: bold;
+        .form-container {
+            margin-top: 20px;
+        }
+        .form-container input {
+            padding: 10px;
+            width: 70%;
+            margin-bottom: 10px;
+        }
+        .form-container button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            color: green;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -64,15 +112,36 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
 
 <div class="bookstore-container">
     <h1>Welcome to the Bookstore</h1>
+
     <ul class="book-list">
         <?php while ($row = $stmt->fetch()) { ?>
             <li>
                 <a href="./book.php?id=<?= htmlspecialchars($row['id']); ?>" class="book-item">
                     <div class="book-title"><?= htmlspecialchars($row['title']); ?></div>
+                    <div class="book-price">Price: $<?= htmlspecialchars(number_format($row['price'], 2)); ?></div>
                 </a>
             </li>
         <?php } ?>
     </ul>
+
+    <?php if ($message) { ?>
+        <div class="message"><?= htmlspecialchars($message); ?></div>
+    <?php } ?>
+
+    <div class="form-container">
+        <h2>Add a Book</h2>
+        <form method="POST">
+            <input type="text" name="add_title" placeholder="Enter book title to add" required>
+            <input type="number" name="add_price" placeholder="Enter book price" step="0.01" required>
+            <button type="submit">Add Book</button>
+        </form>
+        
+        <h2>Remove a Book</h2>
+        <form method="POST">
+            <input type="text" name="remove_title" placeholder="Enter book title to remove" required>
+            <button type="submit">Remove Book</button>
+        </form>
+    </div>
 </div>
 
 </body>

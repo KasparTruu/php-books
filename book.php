@@ -3,9 +3,24 @@ require_once('./connection.php');
 
 $id = $_GET['id'];
 
+// Retrieve the book details
 $stmt = $pdo->prepare('SELECT * FROM books WHERE id = :id');
 $stmt->execute(['id' => $id]);
 $book = $stmt->fetch();
+
+// Check if the form has been submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newTitle = trim($_POST['title']);
+    $newPrice = trim($_POST['price']);
+
+    // Update the book title and price in the database
+    $updateStmt = $pdo->prepare('UPDATE books SET title = :title, price = :price WHERE id = :id');
+    $updateStmt->execute(['title' => $newTitle, 'price' => $newPrice, 'id' => $id]);
+
+    // Refresh the book details after updating
+    $stmt->execute(['id' => $id]);
+    $book = $stmt->fetch();
+}
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +32,7 @@ $book = $stmt->fetch();
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
+            background-color: #f4f4f9;  
             margin: 0;
             padding: 0;
             display: flex;
@@ -44,14 +59,33 @@ $book = $stmt->fetch();
         .description {
             text-align: justify;
         }
-        .back-link {
+        .back-link, .update-button {
             display: inline-block;
             margin-top: 20px;
             color: #007bff;
             text-decoration: none;
         }
-        .back-link:hover {
+        .back-link:hover, .update-button:hover {
             text-decoration: underline;
+        }
+        .form {
+            margin-top: 20px;
+        }
+        .form input {
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 10px;
+        }
+        .form button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -61,6 +95,17 @@ $book = $stmt->fetch();
         <p class="author">Author: <?= htmlspecialchars($book['author']) ?></p>
         <p class="year">Published: <?= htmlspecialchars($book['year_published']) ?></p>
         <p class="description"><?= htmlspecialchars($book['description']) ?></p>
+        <p class="price">Price: $<?= htmlspecialchars(number_format($book['price'], 2)) ?></p>
+
+        <div class="form">
+            <h2>Change Book Details</h2>
+            <form method="POST">
+                <input type="text" name="title" placeholder="Enter new book title" required>
+                <input type="number" name="price" placeholder="Enter new price" step="0.01" required>
+                <button type="submit">Update Book</button>
+            </form>
+        </div>
+
         <a class="back-link" href="/">Back to Bookstore</a>
     </div>
 </body>
