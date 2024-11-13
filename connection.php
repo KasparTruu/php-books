@@ -3,7 +3,7 @@
     $host = 'd124546.mysql.zonevs.eu';
     $db   = 'd124546_bookstore';
     $user = 'd124546_bookstore';
-    $pass = 'bv4NFLhbhrxPM3H';
+    $pass = '1243658790';
     $charset = 'utf8mb4';
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
     
