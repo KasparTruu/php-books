@@ -3,6 +3,7 @@ require_once('./connection.php');
 
 // Initialize messages
 $message = '';
+$searchTerm = '';
 
 // Check if a form has been submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -25,11 +26,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $deleteStmt->execute(['title' => $removeTitle]);
 
         $message = 'Book removed successfully.';
+    } elseif (isset($_POST['search_term'])) {
+        // Search for a book
+        $searchTerm = trim($_POST['search_term']);
     }
 }
 
-// Fetch all books in alphabetical order by title
-$stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
+// Fetch books based on search term
+if ($searchTerm) {
+    $stmt = $pdo->prepare('SELECT * FROM books WHERE title LIKE :title ORDER BY title ASC');
+    $stmt->execute(['title' => '%' . $searchTerm . '%']);
+} else {
+    $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
+}
 ?>
 
 <!DOCTYPE html>
@@ -48,7 +57,7 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            position: relative; /* For positioning child elements */
+            position: relative;
         }
         .bookstore-container {
             width: 100%;
@@ -83,15 +92,15 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             transform: scale(1.02);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
-        .form-container {
+        .form-container, .search-container {
             margin-top: 20px;
         }
-        .form-container input {
+        .form-container input, .search-container input {
             padding: 10px;
             width: 70%;
             margin-bottom: 10px;
         }
-        .form-container button {
+        .form-container button, .search-container button {
             padding: 10px 20px;
             background-color: #007bff;
             color: white;
@@ -99,7 +108,7 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
             border-radius: 5px;
             cursor: pointer;
         }
-        .form-container button:hover {
+        .form-container button:hover, .search-container button:hover {
             background-color: #0056b3;
         }
         .message {
@@ -112,6 +121,14 @@ $stmt = $pdo->query('SELECT * FROM books ORDER BY title ASC');
 
 <div class="bookstore-container">
     <h1>Welcome to the Bookstore</h1>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <form method="POST">
+            <input type="text" name="search_term" placeholder="Search by book title" value="<?= htmlspecialchars($searchTerm); ?>">
+            <button type="submit">Search</button>
+        </form>
+    </div>
 
     <ul class="book-list">
         <?php while ($row = $stmt->fetch()) { ?>
