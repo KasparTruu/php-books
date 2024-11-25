@@ -1,20 +1,18 @@
 <?php
-require_once('./connection.php');
 
-// Check if the ID is passed via GET parameter
-if (isset($_GET['id'])) {
+// remove author from book
+if ( isset($_POST['action']) && $_POST['action'] == 'remove_auhtor' ) {
+    
+    require_once('./connection.php');
+
     $id = $_GET['id'];
 
-    // Prepare SQL statement to remove the author from the book
-    $stmt = $pdo->prepare('UPDATE books SET author = NULL WHERE id = :id');
-    $stmt->execute(['id' => $id]);
+    $stmt = $pdo->prepare('DELETE FROM book_authors WHERE book_id = :book_id AND author_id = :auhtor_id;');
+    $stmt->execute(['book_id' => $id, 'auhtor_id' => $_POST['author_id']]);
 
-    // Redirect to the book details page or book list after removal
-    header('Location: book.php?id=' . $id); // Redirect back to the book's detail page
-    exit(); // Ensure no further code is executed after redirect
+    header("Location: ./edit.php?id={$id}");
+    
 } else {
-    // If ID is not provided, redirect back to the book list or display an error
-    header('Location: index.php'); // Redirect to the book list page
-    exit();
+    
+    header("Location: ./index.php");
 }
-?>
